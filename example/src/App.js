@@ -8,7 +8,18 @@ import 'react-roulette-pro/dist/index.css';
 import reproductionArray from './utills/reproductionArray';
 import getRandomIntInRange from './utills/getRandomIntInRange';
 
-import sound from './sounds/rickroll.mp3';
+import sound1 from './sounds/bitvaEkstrasensov.mp3';
+import sound2 from './sounds/ktoMillioner.mp3';
+import sound3 from './sounds/cherepashki.mp3';
+import sound4 from './sounds/chtoGdeKogda.mp3';
+import sound5 from './sounds/komedyKlub.mp3';
+import sound6 from './sounds/okna.mp3';
+import sound7 from './sounds/pila.mp3';
+import sound8 from './sounds/pokemon.mp3';
+import sound9 from './sounds/poleChudes.mp3';
+import sound10 from './sounds/pustGorovyat.mp3';
+import sound11 from './sounds/pyureshka.mp3';
+import sound12 from './sounds/twitchDonat.mp3';
 
 import './App.css';
 
@@ -23,57 +34,47 @@ const Toast = Swal.mixin({
     toast.addEventListener('mouseleave', Swal.resumeTimer);
   },
 });
-
+const sounds = [sound1, sound2, sound3, sound4, sound5, sound6, sound7, sound8, sound9, sound10, sound11, sound12 ];
 const prizes = [
   {
     id: 'a44c728d-8a0e-48ca-a963-3d5ce6dd41b0',
-    image: 'https://i.ibb.co/ZLHZgKf/good-0.png',
-    text: 'Monoblock Apple iMac 27',
+    image: 'https://i.ibb.co/xfS2ZtF/Cam-Scanner-26-10-2024-21-34-1.jpg',
+    text: 'Руслан Ш.',
   },
   {
     id: '7d24b681-82d9-4fc0-b034-c82f9db11a59',
-    image: 'https://i.ibb.co/6Z6Xm9d/good-1.png',
-    text: 'Apple MacBook Pro 13 Late 2020',
+    image: 'https://i.ibb.co/GvysNyy/IMG-3754.jpg',
+    text: 'Анна Т.',
   },
   {
     id: '9da9a287-952f-41bd-8c7a-b488938d7c7a',
-    image: 'https://i.ibb.co/T1M05LR/good-2.png',
-    text: 'Apple iPhone 13 Pro Max 512GB',
+    image: 'https://i.ibb.co/wNVspYy/2024-10-27-18-18-01.jpg',
+    text: 'Анна М.',
   },
   {
     id: '04106f3f-f99f-47e4-a62e-3c81fc8cf794',
-    image: 'https://i.ibb.co/Qbm8cNL/good-3.png',
-    text: 'Apple MacBook Pro M1 13 256GB',
+    image: 'https://i.ibb.co/2NgPH2S/2024-10-27-18-20-02.jpg',
+    text: 'Наталья С.',
   },
   {
     id: '23c551bf-8425-4ffd-b7c2-77c87844f89d',
-    image: 'https://i.ibb.co/5Tpfs6W/good-4.png',
-    text: 'MacBook Air 13',
+    image: 'https://i.ibb.co/K9BGDhB/IMG-3753.jpg',
+    text: 'Даниил К.',
   },
   {
     id: 'e4060930-538f-4bf7-ab8e-8d2aa05fba43',
-    image: 'https://i.ibb.co/64k8D1c/good-5.png',
-    text: 'Apple iPad Pro 12.9',
+    image: 'https://i.ibb.co/Dbs2YrT/istockphoto-1300845620-612x612.jpg',
+    text: 'Андрей П.',
   },
   {
     id: 'fb121804-e4f6-4fce-bdd6-1e3189172f37',
-    image: 'https://i.ibb.co/TLjjsG3/good-6.png',
-    text: 'Apple AirPods Max',
+    image: 'https://i.ibb.co/7vNsPY3/IMG-3752.jpg',
+    text: 'Анна О.',
   },
   {
     id: '26ee933e-0858-481d-afe8-b30d3829242a',
-    image: 'https://i.ibb.co/943n9PQ/good-7.png',
-    text: 'Apple iPad Pro 12.9',
-  },
-  {
-    id: 'c769c2b1-df6e-4e6e-8985-53b531527b35',
-    image: 'https://i.ibb.co/HVpYpsH/good-8.png',
-    text: 'Apple Watch Series 6 44mm',
-  },
-  {
-    id: 'bd9f86a3-9a72-4ba3-a071-3ea9cbc87cc1',
-    image: 'https://i.ibb.co/BnmJvZT/good-9.png',
-    text: 'Apple Smart Keyboard iPad Pro 12.9',
+    image: 'https://i.ibb.co/Dbs2YrT/istockphoto-1300845620-612x612.jpg',
+    text: 'Сергей П.',
   },
 ];
 
@@ -123,13 +124,17 @@ const getOptionsAsString = (settings, design) => {
 };
 
 const API = {
-  getPrizeIndex: async () => {
+  getPrizeIndex: async (prizeList) => {
     const randomPrizeIndex = getRandomIntInRange(0, prizes.length - 1);
-    const randomPrizeIndexOffset = prizes.length * 4;
+    const randomPrizeIndexOffset = prizes.length * 10;
 
-    return randomPrizeIndex + randomPrizeIndexOffset;
+    const finalPrizeIndex = (randomPrizeIndex + randomPrizeIndexOffset) % prizeList.length;
+    return finalPrizeIndex;
   },
 };
+
+const getRandomSound = () => sounds[Math.floor(Math.random() * sounds.length)];
+
 
 const App = () => {
   const [settings, setSettings] = useState({
@@ -144,7 +149,7 @@ const App = () => {
       value: 'Regular',
     },
     prizesWithText: {
-      name: 'Prizes with text',
+      name: 'С именами',
       options: [false, true],
       value: false,
     },
@@ -178,7 +183,7 @@ const App = () => {
     //   forDesign: 'GracefulLines',
     // },
     soundWhileSpinning: {
-      name: 'Sound while spinning',
+      name: 'Звук',
       options: [false, true],
       value: false,
     },
@@ -189,8 +194,8 @@ const App = () => {
     },
     spinningTime: {
       name: 'Spinning time',
-      options: ['3', '5', '10', '15', '20'],
-      value: '3',
+      options: ['3', '7', '10', '15', '20'],
+      value: '1',
     },
   });
 
@@ -227,17 +232,13 @@ const App = () => {
     if (!spinning || !prizeList.length) {
       return;
     }
-
+  
     const prepare = async () => {
-      const newPrizeIndex = await API.getPrizeIndex();
+      const newPrizeIndex = await API.getPrizeIndex(prizeList); // ensure prizeList is passed in as a parameter
       setPrizeIndex(newPrizeIndex);
       setStart(false);
-
-      const { id } = prizeList[newPrizeIndex];
-
-      Toast.fire({ icon: 'info', title: `Must win id - ${id}` });
     };
-
+  
     prepare();
   }, [spinning, prizeList]);
 
@@ -256,11 +257,18 @@ const App = () => {
   };
 
   const handleStart = () => {
-    setSpinning(true);
+    setPrizeIndex(null);  // Reset prizeIndex first for clarity
+    setSpinning(true);    // Set spinning to true to initiate a new spin
+    setStart(false);      // Reset start so it’s ready for the new spin
+  
+    // Small delay to ensure states are set before setting `start` to true
+    setTimeout(() => {
+      setStart(true);
+    }, 50);
   };
 
   const handlePrizeDefined = () => {
-    Toast.fire({ icon: 'success', title: '🥳 Prize defined 🥳', timer: 1500 });
+    // Toast.fire({ icon: 'success', title: '🥳 Prize defined 🥳', timer: 1500 });
 
     setSpinning(false);
   };
@@ -359,7 +367,7 @@ const App = () => {
               ? `designOptions={{${designOptionsString}}}`
               : ''
           }
-          ${soundWhileSpinning ? `soundWhileSpinning="${sound}"` : ''}
+          ${soundWhileSpinning ? `soundWhileSpinning="${sounds}"` : ''}
           ${optionsString !== '' ? `options={{ ${optionsString} }}` : ''}
           ${
             prizesWithText === true
@@ -387,7 +395,7 @@ const App = () => {
           classes={{
             wrapper: 'roulette-pro-wrapper-additional-styles',
           }}
-          soundWhileSpinning={soundWhileSpinning ? sound : null}
+          soundWhileSpinning={soundWhileSpinning ? getRandomSound() : null}
           options={{ stopInCenter, withoutAnimation }}
           defaultDesignOptions={{ prizesWithText, hideCenterDelimiter }}
         />
