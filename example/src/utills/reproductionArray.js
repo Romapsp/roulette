@@ -1,7 +1,6 @@
-const reproductionArray = (array = [], length = 0) => [
-  ...Array(length)
-    .fill('_')
-    .map(() => array[Math.floor(Math.random() * array.length)]),
-];
+const reproductionArray = (array = [], times = 1) => {
+  return array.flatMap((item) => Array(times).fill(item));
+};
+
 
 export default reproductionArray;

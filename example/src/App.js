@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
 import { nanoid } from 'nanoid';
 
@@ -63,7 +63,7 @@ const prizes = [
   },
   {
     id: 'e4060930-538f-4bf7-ab8e-8d2aa05fba43',
-    image: 'https://i.ibb.co/Dbs2YrT/istockphoto-1300845620-612x612.jpg',
+    image: 'https://i.ibb.co/6nWZQCN/IMG-3763.jpg',
     text: 'Андрей П.',
   },
   {
@@ -73,7 +73,7 @@ const prizes = [
   },
   {
     id: '26ee933e-0858-481d-afe8-b30d3829242a',
-    image: 'https://i.ibb.co/Dbs2YrT/istockphoto-1300845620-612x612.jpg',
+    image: 'https://i.ibb.co/4wLxVd7/IMG-3755.jpg',
     text: 'Сергей П.',
   },
 ];
@@ -124,12 +124,10 @@ const getOptionsAsString = (settings, design) => {
 };
 
 const API = {
-  getPrizeIndex: async (prizeList) => {
+  getPrizeIndex: async () => {
     const randomPrizeIndex = getRandomIntInRange(0, prizes.length - 1);
-    const randomPrizeIndexOffset = prizes.length * 10;
-
-    const finalPrizeIndex = (randomPrizeIndex + randomPrizeIndexOffset) % prizeList.length;
-    return finalPrizeIndex;
+    const randomPrizeIndexOffset = prizes.length * 4;
+    return randomPrizeIndex + randomPrizeIndexOffset;
   },
 };
 
@@ -151,7 +149,7 @@ const App = () => {
     prizesWithText: {
       name: 'С именами',
       options: [false, true],
-      value: false,
+      value: true,
     },
     withoutAnimation: {
       name: 'Without animation',
@@ -185,7 +183,7 @@ const App = () => {
     soundWhileSpinning: {
       name: 'Звук',
       options: [false, true],
-      value: false,
+      value: true,
     },
     stopInCenter: {
       name: 'Stop in the prize item center',
@@ -194,8 +192,9 @@ const App = () => {
     },
     spinningTime: {
       name: 'Spinning time',
-      options: ['3', '7', '10', '15', '20'],
-      value: '1',
+      // options: ['3', '7', '10', '15', '20'],
+      options: ['10'],
+      value: '10',
     },
   });
 
@@ -203,43 +202,81 @@ const App = () => {
   const [start, setStart] = useState(false);
   const [spinning, setSpinning] = useState(false);
   const [prizeIndex, setPrizeIndex] = useState(0);
+  const audioRef = useRef(new Audio());
 
-  useEffect(() => {
-    const reproducedArray = [
-      ...prizes,
-      ...reproductionArray(prizes, prizes.length * 3),
-      ...prizes,
-      ...reproductionArray(prizes, prizes.length),
-    ];
+  const playSound = () => {
+    // if (audioRef.current) {
+    //   audioRef.current.pause(); // Stop any existing audio
+    //   audioRef.current.currentTime = 0; // Reset to start
+    // }
+    audioRef.current.src = getRandomSound(); // Set the new sound
+    audioRef.current.play(); // Play the new sound
+  };
 
-    const list = [...reproducedArray].map((item) => ({
-      ...item,
-      id: `${item.id}--${nanoid()}`,
-    }));
-
-    setPrizeList(list);
-  }, []);
-
-  useEffect(() => {
-    if (!prizeIndex || start) {
-      return;
+  const shuffleArray = (array) => {
+    const shuffled = array
+      .map((item) => ({ item, sort: Math.random() })) // Create array of items with random sort keys
+      .sort((a, b) => a.sort - b.sort) // Sort by the random keys
+  
+    // Ensure no adjacent items are the same
+    const uniqueShuffled = [];
+    for (let i = 0; i < shuffled.length; i++) {
+      const currentItem = shuffled[i].item;
+      if (i === 0 || currentItem.id !== uniqueShuffled[uniqueShuffled.length - 1].id) {
+        uniqueShuffled.push(currentItem);
+      } else {
+        // If the current item is the same as the last one, find the next unique item
+        const nextIndex = (i + 1) % shuffled.length; // Wrap around to avoid going out of bounds
+        uniqueShuffled.push(shuffled[nextIndex].item);
+        i++; // Skip the next item as we've already added it
+      }
     }
+  
+    return uniqueShuffled;
+  };
+  
 
-    setStart(true);
+  useEffect(() => {
+    const totalPrizes = 48; // Total number of prizes to display
+    const numberOfPrizes = prizes.length; // Total number of unique prizes
+    const timesEachPrizeShouldAppear = totalPrizes / numberOfPrizes; // Calculate how many times each prize should appear
+  
+    // Create an array with equal representation for each prize
+    const equalPrizesArray = [];
+    prizes.forEach((prize) => {
+      for (let i = 0; i < timesEachPrizeShouldAppear; i++) {
+        equalPrizesArray.push(prize);
+      }
+    });
+  
+    // Shuffle the array to randomize the order
+    const shuffledArray = shuffleArray(equalPrizesArray);
+  
+    // Map the shuffled array to generate unique IDs
+    const list = shuffledArray.map((item) => ({
+      ...item,
+      id: `${item.id}--${nanoid()}`, // Generate a unique ID for each prize
+    }));
+  
+    setPrizeList(list); // Update the prize list state
+  }, []);
+  
+  useEffect(() => {
+    if (!prizeIndex || start) return; // If no prize or already started, exit
+    setStart(true); // Start the roulette
   }, [prizeIndex, start]);
 
   useEffect(() => {
-    if (!spinning || !prizeList.length) {
-      return;
-    }
-  
+    if (!spinning || !prizeList.length) return; // Exit if not spinning or prize list is empty
     const prepare = async () => {
-      const newPrizeIndex = await API.getPrizeIndex(prizeList); // ensure prizeList is passed in as a parameter
-      setPrizeIndex(newPrizeIndex);
-      setStart(false);
+      const newPrizeIndex = await API.getPrizeIndex(); // Get a new prize index
+      setPrizeIndex(newPrizeIndex); // Update the prize index state
+      setStart(false); // Reset start state
+
+      const { id } = prizeList[newPrizeIndex]; // Get the selected prize ID
+      // Toast.fire({ icon: 'info', title: `Must win id - ${id}` }); // Show toast notification
     };
-  
-    prepare();
+    prepare(); // Call the prepare function
   }, [spinning, prizeList]);
 
   const handleSettingsChange = (e) => {
@@ -257,20 +294,15 @@ const App = () => {
   };
 
   const handleStart = () => {
-    setPrizeIndex(null);  // Reset prizeIndex first for clarity
-    setSpinning(true);    // Set spinning to true to initiate a new spin
-    setStart(false);      // Reset start so it’s ready for the new spin
-  
-    // Small delay to ensure states are set before setting `start` to true
-    setTimeout(() => {
-      setStart(true);
-    }, 50);
+    setSpinning(true); // Start spinning
+    playSound();       // Play sound on spin start
   };
 
   const handlePrizeDefined = () => {
-    // Toast.fire({ icon: 'success', title: '🥳 Prize defined 🥳', timer: 1500 });
-
-    setSpinning(false);
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+    setSpinning(false); // Stop spinning
   };
 
   const type = settings.type.value;
@@ -280,7 +312,7 @@ const App = () => {
   const withoutAnimation = settings.withoutAnimation.value;
   const prizesWithText = settings.prizesWithText.value;
   const hideCenterDelimiter = settings.hideCenterDelimiter.value;
-  const spinningTime = +settings.spinningTime.value;
+  const spinningTime = +settings.spinningTime.value || 15; // Default to 15 if value is empty
 
   const designOptions = getDesignOptions(settings);
 
@@ -349,36 +381,36 @@ const App = () => {
     .map(([key, value]) => `${key}: ${value}, `)
     .join('');
 
-  const codeElement = (
-    <pre className="pre-element">
-      <code className="pre-element-code">
-        {`
-        const prizeList = ${JSON.stringify(prizeList, null, 2)};
+  // const codeElement = (
+  //   <pre className="pre-element">
+  //     <code className="pre-element-code">
+  //       {`
+  //       const prizeList = ${JSON.stringify(prizeList, null, 2)};
 
-        <RoulettePro
-          ${type !== settings.type.options[0] ? `type="${type}"` : ''}
-          start={${Boolean(start)}}
-          prizes={prizeList}
-          prizeIndex={${prizeIndex}}
-          spinningTime={${spinningTime}}
-          ${/* ${isDefaultDesign ? '' : `design="${design}"`} */ ''}
-          ${
-            designOptionsString
-              ? `designOptions={{${designOptionsString}}}`
-              : ''
-          }
-          ${soundWhileSpinning ? `soundWhileSpinning="${sounds}"` : ''}
-          ${optionsString !== '' ? `options={{ ${optionsString} }}` : ''}
-          ${
-            prizesWithText === true
-              ? 'defaultDesignOptions={{ prizesWithText: true }}'
-              : ''
-          }
-        />
-      `}
-      </code>
-    </pre>
-  );
+  //       <RoulettePro
+  //         ${type !== settings.type.options[0] ? `type="${type}"` : ''}
+  //         start={${Boolean(start)}}
+  //         prizes={prizeList}
+  //         prizeIndex={${prizeIndex}}
+  //         spinningTime={${spinningTime}}
+  //         ${/* ${isDefaultDesign ? '' : `design="${design}"`} */ ''}
+  //         ${
+  //           designOptionsString
+  //             ? `designOptions={{${designOptionsString}}}`
+  //             : ''
+  //         }
+  //         ${soundWhileSpinning ? `soundWhileSpinning="${sounds}"` : ''}
+  //         ${optionsString !== '' ? `options={{ ${optionsString} }}` : ''}
+  //         ${
+  //           prizesWithText === true
+  //             ? 'defaultDesignOptions={{ prizesWithText: true }}'
+  //             : ''
+  //         }
+  //       />
+  //     `}
+  //     </code>
+  //   </pre>
+  // );
 
   return (
     <div>
@@ -395,7 +427,7 @@ const App = () => {
           classes={{
             wrapper: 'roulette-pro-wrapper-additional-styles',
           }}
-          soundWhileSpinning={soundWhileSpinning ? getRandomSound() : null}
+          // soundWhileSpinning={soundWhileSpinning ? getRandomSound() : null}
           options={{ stopInCenter, withoutAnimation }}
           defaultDesignOptions={{ prizesWithText, hideCenterDelimiter }}
         />
@@ -416,7 +448,7 @@ const App = () => {
       </div>
 
       {settingsElement}
-      {codeElement}
+      {/* {codeElement} */}
     </div>
   );
 };
